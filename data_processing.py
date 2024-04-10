@@ -16,6 +16,7 @@ def build_tokenizer():
                         output_mode="int",
                         output_sequence_length=SEQ_LENGTH,
                         standardize=text_standrardization,
+                        
                                                     )
     return vectorization
 
