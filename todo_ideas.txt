@@ -1,0 +1,5 @@
+
+1) Use the same logic of composing all 5 examples in a Y response
+2) Write logic for generating a caption
+3) Write file for training model specifying params as args
+4) Write logic for tracking training in WandB 
