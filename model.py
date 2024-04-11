@@ -159,9 +159,150 @@ class TransformerDecoderBlock(layers.Layer):
     
 
 
+# class ImageCaptioningModel(keras.Model):
+#     def __init__(
+#         self, cnn_model, encoder, decoder, num_captions_per_image=1,
+#     ):
+#         super().__init__()
+#         self.cnn_model = cnn_model
+#         self.encoder = encoder
+#         self.decoder = decoder
+#         self.loss_tracker = keras.metrics.Mean(name="loss")
+#         self.acc_tracker = keras.metrics.Mean(name="accuracy")
+#         self.num_captions_per_image = num_captions_per_image
+
+
+#     def call(self, inputs):
+#         x = self.cnn_model(inputs[0])
+#         x = self.encoder(x, False)
+#         x = self.decoder(inputs[2],x,training=inputs[1],mask=None)
+#         return x
+
+#     def calculate_loss(self, y_true, y_pred, mask):
+#         loss = self.loss(y_true, y_pred)
+#         mask = tf.cast(mask, dtype=loss.dtype)
+#         loss *= mask
+#         return tf.reduce_sum(loss) / tf.reduce_sum(mask)
+
+#     def calculate_accuracy(self, y_true, y_pred, mask):
+#         accuracy = tf.equal(y_true, tf.argmax(y_pred, axis=2))
+#         accuracy = tf.math.logical_and(mask, accuracy)
+#         accuracy = tf.cast(accuracy, dtype=tf.float32)
+#         mask = tf.cast(mask, dtype=tf.float32)
+#         return tf.reduce_sum(accuracy) / tf.reduce_sum(mask)
+
+#     def train_step(self, batch_data):
+#         batch_img, batch_seq = batch_data
+#         batch_loss = 0
+#         batch_acc = 0
+
+#         # 1. Get image embeddings
+#         img_embed = self.cnn_model(batch_img)
+
+#         # 2. Pass each of the five captions one by one to the decoder
+#         # along with the encoder outputs and compute the loss as well as accuracy
+#         # for each caption.
+#         for i in range(self.num_captions_per_image):
+#             with tf.GradientTape() as tape:
+#                 # 3. Pass image embeddings to encoder
+#                 encoder_out = self.encoder(img_embed, training=True)
+
+#                 batch_seq_inp = batch_seq[:, i, :-1]
+#                 batch_seq_true = batch_seq[:, i, 1:]
+
+#                 # 4. Compute the mask for the input sequence
+#                 mask = tf.math.not_equal(batch_seq_inp, 0)
+
+#                 # 5. Pass the encoder outputs, sequence inputs along with
+#                 # mask to the decoder
+#                 batch_seq_pred = self.decoder(
+#                     batch_seq_inp, encoder_out, training=True, mask=mask
+#                 )
+
+#                 # 6. Calculate loss and accuracy
+#                 caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+#                 caption_acc = self.calculate_accuracy(
+#                     batch_seq_true, batch_seq_pred, mask
+#                 )
+
+#                 # 7. Update the batch loss and batch accuracy
+#                 batch_loss += caption_loss
+#                 batch_acc += caption_acc
+
+#             # 8. Get the list of all the trainable weights
+#             train_vars = (
+#                 self.encoder.trainable_variables + self.decoder.trainable_variables
+#             )
+
+#             # 9. Get the gradients
+#             grads = tape.gradient(caption_loss, train_vars)
+
+#             # 10. Update the trainable weights
+#             self.optimizer.apply_gradients(zip(grads, train_vars))
+
+#         loss = batch_loss
+#         acc = batch_acc / float(self.num_captions_per_image)
+
+#         self.loss_tracker.update_state(loss)
+#         self.acc_tracker.update_state(acc)
+#         return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
+
+#     def test_step(self, batch_data):
+#         batch_img, batch_seq = batch_data
+#         batch_loss = 0
+#         batch_acc = 0
+
+#         # 1. Get image embeddings
+#         img_embed = self.cnn_model(batch_img)
+
+#         # 2. Pass each of the five captions one by one to the decoder
+#         # along with the encoder outputs and compute the loss as well as accuracy
+#         # for each caption.
+#         for i in range(self.num_captions_per_image):
+#             # 3. Pass image embeddings to encoder
+#             encoder_out = self.encoder(img_embed, training=False)
+
+#             batch_seq_inp = batch_seq[:, i, :-1]
+#             batch_seq_true = batch_seq[:, i, 1:]
+
+#             # 4. Compute the mask for the input sequence
+#             mask = tf.math.not_equal(batch_seq_inp, 0)
+
+#             # 5. Pass the encoder outputs, sequence inputs along with
+#             # mask to the decoder
+#             batch_seq_pred = self.decoder(
+#                 batch_seq_inp, encoder_out, training=False, mask=mask
+#             )
+
+#             # 6. Calculate loss and accuracy
+#             caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+#             caption_acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+
+#             # 7. Update the batch loss and batch accuracy
+#             batch_loss += caption_loss
+#             batch_acc += caption_acc
+
+#         loss = batch_loss
+#         acc = batch_acc / float(self.num_captions_per_image)
+
+#         self.loss_tracker.update_state(loss)
+#         self.acc_tracker.update_state(acc)
+#         return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
+
+#     @property
+#     def metrics(self):
+#         # We need to list our metrics here so the `reset_states()` can be
+#         # called automatically.
+#         return [self.loss_tracker, self.acc_tracker]
+
 class ImageCaptioningModel(keras.Model):
     def __init__(
-        self, cnn_model, encoder, decoder, num_captions_per_image=1,
+        self,
+        cnn_model,
+        encoder,
+        decoder,
+        num_captions_per_image=1,
+        image_aug=None,
     ):
         super().__init__()
         self.cnn_model = cnn_model
@@ -170,14 +311,13 @@ class ImageCaptioningModel(keras.Model):
         self.loss_tracker = keras.metrics.Mean(name="loss")
         self.acc_tracker = keras.metrics.Mean(name="accuracy")
         self.num_captions_per_image = num_captions_per_image
-
+        self.image_aug = image_aug
 
     def call(self, inputs):
         x = self.cnn_model(inputs[0])
         x = self.encoder(x, False)
         x = self.decoder(inputs[2],x,training=inputs[1],mask=None)
         return x
-
     def calculate_loss(self, y_true, y_pred, mask):
         loss = self.loss(y_true, y_pred)
         mask = tf.cast(mask, dtype=loss.dtype)
@@ -191,10 +331,25 @@ class ImageCaptioningModel(keras.Model):
         mask = tf.cast(mask, dtype=tf.float32)
         return tf.reduce_sum(accuracy) / tf.reduce_sum(mask)
 
+    def _compute_caption_loss_and_acc(self, img_embed, batch_seq, training=True):
+        encoder_out = self.encoder(img_embed, training=training)
+        batch_seq_inp = batch_seq[:, :-1]
+        batch_seq_true = batch_seq[:, 1:]
+        mask = tf.math.not_equal(batch_seq_true, 0)
+        batch_seq_pred = self.decoder(
+            batch_seq_inp, encoder_out, training=training, mask=mask
+        )
+        loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
+        acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+        return loss, acc
+
     def train_step(self, batch_data):
         batch_img, batch_seq = batch_data
         batch_loss = 0
         batch_acc = 0
+
+        if self.image_aug:
+            batch_img = self.image_aug(batch_img)
 
         # 1. Get image embeddings
         img_embed = self.cnn_model(batch_img)
@@ -204,48 +359,35 @@ class ImageCaptioningModel(keras.Model):
         # for each caption.
         for i in range(self.num_captions_per_image):
             with tf.GradientTape() as tape:
-                # 3. Pass image embeddings to encoder
-                encoder_out = self.encoder(img_embed, training=True)
-
-                batch_seq_inp = batch_seq[:, i, :-1]
-                batch_seq_true = batch_seq[:, i, 1:]
-
-                # 4. Compute the mask for the input sequence
-                mask = tf.math.not_equal(batch_seq_inp, 0)
-
-                # 5. Pass the encoder outputs, sequence inputs along with
-                # mask to the decoder
-                batch_seq_pred = self.decoder(
-                    batch_seq_inp, encoder_out, training=True, mask=mask
+                loss, acc = self._compute_caption_loss_and_acc(
+                    img_embed, batch_seq[:, i, :], training=True
                 )
 
-                # 6. Calculate loss and accuracy
-                caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
-                caption_acc = self.calculate_accuracy(
-                    batch_seq_true, batch_seq_pred, mask
-                )
+                # 3. Update loss and accuracy
+                batch_loss += loss
+                batch_acc += acc
 
-                # 7. Update the batch loss and batch accuracy
-                batch_loss += caption_loss
-                batch_acc += caption_acc
-
-            # 8. Get the list of all the trainable weights
+            # 4. Get the list of all the trainable weights
             train_vars = (
                 self.encoder.trainable_variables + self.decoder.trainable_variables
             )
 
-            # 9. Get the gradients
-            grads = tape.gradient(caption_loss, train_vars)
+            # 5. Get the gradients
+            grads = tape.gradient(loss, train_vars)
 
-            # 10. Update the trainable weights
+            # 6. Update the trainable weights
             self.optimizer.apply_gradients(zip(grads, train_vars))
 
-        loss = batch_loss
-        acc = batch_acc / float(self.num_captions_per_image)
+        # 7. Update the trackers
+        batch_acc /= float(self.num_captions_per_image)
+        self.loss_tracker.update_state(batch_loss)
+        self.acc_tracker.update_state(batch_acc)
 
-        self.loss_tracker.update_state(loss)
-        self.acc_tracker.update_state(acc)
-        return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
+        # 8. Return the loss and accuracy values
+        return {
+            "loss": self.loss_tracker.result(),
+            "acc": self.acc_tracker.result(),
+        }
 
     def test_step(self, batch_data):
         batch_img, batch_seq = batch_data
@@ -259,35 +401,25 @@ class ImageCaptioningModel(keras.Model):
         # along with the encoder outputs and compute the loss as well as accuracy
         # for each caption.
         for i in range(self.num_captions_per_image):
-            # 3. Pass image embeddings to encoder
-            encoder_out = self.encoder(img_embed, training=False)
-
-            batch_seq_inp = batch_seq[:, i, :-1]
-            batch_seq_true = batch_seq[:, i, 1:]
-
-            # 4. Compute the mask for the input sequence
-            mask = tf.math.not_equal(batch_seq_inp, 0)
-
-            # 5. Pass the encoder outputs, sequence inputs along with
-            # mask to the decoder
-            batch_seq_pred = self.decoder(
-                batch_seq_inp, encoder_out, training=False, mask=mask
+            loss, acc = self._compute_caption_loss_and_acc(
+                img_embed, batch_seq[:, i, :], training=False
             )
 
-            # 6. Calculate loss and accuracy
-            caption_loss = self.calculate_loss(batch_seq_true, batch_seq_pred, mask)
-            caption_acc = self.calculate_accuracy(batch_seq_true, batch_seq_pred, mask)
+            # 3. Update batch loss and batch accuracy
+            batch_loss += loss
+            batch_acc += acc
 
-            # 7. Update the batch loss and batch accuracy
-            batch_loss += caption_loss
-            batch_acc += caption_acc
+        batch_acc /= float(self.num_captions_per_image)
 
-        loss = batch_loss
-        acc = batch_acc / float(self.num_captions_per_image)
+        # 4. Update the trackers
+        self.loss_tracker.update_state(batch_loss)
+        self.acc_tracker.update_state(batch_acc)
 
-        self.loss_tracker.update_state(loss)
-        self.acc_tracker.update_state(acc)
-        return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
+        # 5. Return the loss and accuracy values
+        return {
+            "loss": self.loss_tracker.result(),
+            "acc": self.acc_tracker.result(),
+        }
 
     @property
     def metrics(self):
