@@ -3,3 +3,6 @@ __pycache__
 assets/*.h5
 assets/*.keras
 *.csv
+*.h5
+*.keras
+
