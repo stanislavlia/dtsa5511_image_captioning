@@ -38,3 +38,6 @@ def load_trained_model_weights(path_to_weights):
 
     return caption_model
 
+
+def save_training_history(history, file):
+    pass

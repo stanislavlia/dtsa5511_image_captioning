@@ -10,7 +10,7 @@ VOCAB_SIZE=10000
 AUTOTUNE=tf.data.AUTOTUNE
 
 #MODEL HYPERPARAMS
-SEQ_LENGTH=16
+SEQ_LENGTH=36
 BATCH_SIZE=128
 EPOCHS=20
 EMBED_DIM=512
@@ -19,7 +19,7 @@ ENC_HEADS=2
 DEC_HEADS=2
 
 
-STRIP_CHARS = "!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"
+STRIP_CHARS = "!\"#$%&'()*+,-./:;=?@[\]^_`{|}~"
 
 ###
 
