@@ -36,7 +36,6 @@ def decode_and_resize(img_path, image_size):
     img = tf.io.read_file(img_path)
     img = tf.image.decode_jpeg(img, channels=3)
     img = tf.image.resize(img, image_size)
-    #img = img / 255.0 
     img = tf.image.convert_image_dtype(img, tf.float32)
     return img
 

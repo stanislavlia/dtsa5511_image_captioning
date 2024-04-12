@@ -18,7 +18,7 @@ os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
 
 
 
-##THIS FILE gonna train models with specified params
+#==================PARSING COMMAND LINE ARGS=========================
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Set hyperparameters for the model training.")
@@ -47,6 +47,8 @@ def parse_args():
     return args
 
 args = parse_args()
+
+#==================CONFIG=========================
 
 #Hardcoded for now
 DATA_PATH = "data/flickr30k_images/"
@@ -109,6 +111,7 @@ if not os.path.exists(ARTIFACT_DIR):
 save_trial_config(current_config)
 
 
+#==================DATA PREPROCESSING=========================
 
 ###Creating datasets
 captionings_df = pd.read_csv(os.path.join(DATA_PATH, "results.csv"), sep="|").dropna()
@@ -161,7 +164,9 @@ print("TF-Datasets are created")
 
 
 
-#Building model
+
+
+#==================BUILDING MODEL=========================
 base_model = keras.applications.efficientnet.EfficientNetB1(
         input_shape=(*IMAGE_SIZE, 3),
         include_top=False,
@@ -186,20 +191,18 @@ caption_model = ImageCaptioningModel(
 )
 print("Model is built")
 
-
-X_batch, y_batch = next(iter(train_dataset.take(1))) #SANITY CHECK
-
-
 cross_entropy = keras.losses.SparseCategoricalCrossentropy(
     from_logits=False,
     reduction="none"
 )
 
 
+
+
 #==================CALLBACKS=========================
 
 bckup = keras.callbacks.BackupAndRestore(
-    os.path.join(ARTIFACT_DIR,"train_backup"), save_freq='epoch', delete_checkpoint=True
+    os.path.join(ARTIFACT_DIR,"train_backup"), save_freq='epoch', delete_checkpoint=True    
 )
 
 early_stopping = keras.callbacks.EarlyStopping(patience=2,
@@ -210,12 +213,18 @@ wandb_logger = wandb.integration.keras.WandbCallback(verbose=1,
                                                      )
 
 
-caption_model.compile(optimizer=keras.optimizers.Adam(LR), loss=cross_entropy)
-history = caption_model.fit(X_batch, y_batch,
-                             validation_data=(X_batch, y_batch),
-                               epochs=EPOCHS,
-                               callbacks=[bckup, early_stopping, wandb_logger])
+#==================TRAININING=========================
 
+try:
+    caption_model.compile(optimizer=keras.optimizers.Adam(LR), loss=cross_entropy)
+    history = caption_model.fit(train_dataset,
+                                validation_data=val_dataset,
+                                epochs=EPOCHS,
+                                callbacks=[bckup, early_stopping, wandb_logger])
+except KeyboardInterrupt:
+    print("Training is manually interupted")
+
+#==================SAVING_ARTIFACTS=========================
 save_training_history(history, os.path.join(ARTIFACT_DIR, "train_history.csv"))
 caption_model.save_weights(os.path.join(ARTIFACT_DIR, RUNNAME + ".h5"))
 print("Weights saved: ", RUNNAME + ".h5")
