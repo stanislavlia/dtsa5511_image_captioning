@@ -72,11 +72,14 @@ class TransformerEncoderBlock(layers.Layer):
     
 class TransformerDecoderBlock(layers.Layer):
 
-    def __init__(self, embed_dim, ff_dim, num_heads, **kwargs):
+    def __init__(self, embed_dim, ff_dim, num_heads, seq_len, vocab_size, **kwargs):
         super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.ff_dim = ff_dim
         self.num_heads = num_heads
+        self.seq_len = seq_len
+        self.vocab_size = vocab_size
+
         self.attention_1 = layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=embed_dim, dropout=0.1
         )
@@ -90,11 +93,13 @@ class TransformerDecoderBlock(layers.Layer):
         self.layernorm_2 = layers.LayerNormalization()
         self.layernorm_3 = layers.LayerNormalization()
 
+
         self.embedding = PositionalEmbedding(
-            embed_dim=EMBED_DIM,
-            sequence_length=SEQ_LENGTH,
-            vocab_size=VOCAB_SIZE,
+            embed_dim=self.embed_dim,
+            sequence_length=self.seq_len,
+            vocab_size=self.vocab_size,
         )
+
         self.out = layers.Dense(VOCAB_SIZE, activation="softmax")
 
         self.dropout_1 = layers.Dropout(0.3)

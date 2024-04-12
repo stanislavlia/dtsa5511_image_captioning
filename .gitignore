@@ -5,4 +5,5 @@ assets/*.keras
 *.csv
 *.h5
 *.keras
+artifacts/*
 

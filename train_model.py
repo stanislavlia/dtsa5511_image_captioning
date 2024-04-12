@@ -6,7 +6,6 @@ import pandas as pd
 import os
 from keras import layers
 
-from train_config import *
 import argparse
 
 
@@ -45,6 +44,15 @@ def parse_args():
 
 args = parse_args()
 
+#Hardcoded for now
+DATA_PATH = "data/flickr30k_images/"
+IMAGES_PATH = "data/flickr30k_images/flickr30k_images/"
+IMAGE_SIZE=(224, 224)
+VAL_FRACTION=0.05
+VOCAB_SIZE=10000
+AUTOTUNE=tf.data.AUTOTUNE
+STRIP_CHARS = "!\"#$%&'()*+,-./:;=?@[\]^_`{|}~"
+
 # Assigning values from args directly
 SEQ_LENGTH = args.seq_length
 BATCH_SIZE = args.batch_size
@@ -72,6 +80,10 @@ current_config = {
         "ARTIFACT_DIR" : ARTIFACT_DIR,
         "LR" : LR,
     }
+
+from training_utils import *
+from data_processing import *
+
 
 save_trial_config(current_config)
 
@@ -107,14 +119,15 @@ print("Validation image-text examples: ", val_captionings_df.shape[0])
 
 
 ##Prepare tokinzer
-tokenizer = build_tokenizer()
+tokenizer = build_tokenizer(vocab_size=VOCAB_SIZE,
+                            seq_len=SEQ_LENGTH)
 tokenizer.adapt(train_captionings_df["comment"].tolist())
 print("Tokenizer is ready")
 
 
 #Create TF-datasets
 def process_input(img_path, captions):
-    return decode_and_resize(img_path), tf.reshape(tokenizer(captions), shape=(1, SEQ_LENGTH))
+    return decode_and_resize(img_path, IMAGE_SIZE), tf.reshape(tokenizer(captions), shape=(1, SEQ_LENGTH))
 
 def make_dataset(images, captions):
     dataset = tf.data.Dataset.from_tensor_slices((images, captions))
@@ -148,6 +161,8 @@ encoder = TransformerEncoderBlock(
 )
 decoder = TransformerDecoderBlock(
     embed_dim=EMBED_DIM, ff_dim=FF_DIM, num_heads=DEC_HEADS, 
+    seq_len=SEQ_LENGTH,
+    vocab_size=VOCAB_SIZE
 )
 
 caption_model = ImageCaptioningModel(
