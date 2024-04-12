@@ -8,12 +8,12 @@ from keras import layers
 
 from train_config import *
 import argparse
-from data_processing import build_tokenizer, build_image_augmenter,  decode_and_resize
-from model import TransformerDecoderBlock, TransformerEncoderBlock, ImageCaptioningModel, get_cnn_model
-import keras
+
 
 
 os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
+
+
 
 ##THIS FILE gonna train models with specified params
 
@@ -21,13 +21,13 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Set hyperparameters for the model training.")
 
     # Adding the hyperparameter arguments with their default values
-    parser.add_argument('--seq_length', type=int, default=32,
+    parser.add_argument('--seq_length', type=int, default=36,
                         help='Input sequence length')
     parser.add_argument('--batch_size', type=int, default=128,
                         help='Batch size for training')
     parser.add_argument('--epochs', type=int, default=20,
                         help='Number of epochs to train for')
-    parser.add_argument('--embed_dim', type=int, default=1028,
+    parser.add_argument('--embed_dim', type=int, default=512,
                         help='Dimensionality of the embedding layer')
     parser.add_argument('--ff_dim', type=int, default=256,
                         help='Dimensionality of the feedforward network model')
@@ -35,7 +35,7 @@ def parse_args():
                         help='Number of heads in the encoder multi-head attention mechanism')
     parser.add_argument('--dec_heads', type=int, default=4,
                         help='Number of heads in the decoder multi-head attention mechanism')
-    parser.add_argument('--artifact_dir', type=str, default="./assets",
+    parser.add_argument('--artifact_dir', type=str, default="./default_run",
                         help='Directory to save artifacts')
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Learning rate for training')
@@ -56,9 +56,33 @@ DEC_HEADS = args.dec_heads
 ARTIFACT_DIR = args.artifact_dir
 LR = args.lr
 
+current_config = {
+        "DATA_PATH": DATA_PATH,
+        "IMAGES_PATH": IMAGES_PATH,
+        "IMAGE_SIZE": IMAGE_SIZE,
+        "VAL_FRACTION": VAL_FRACTION,
+        "SEQ_LENGTH": SEQ_LENGTH,
+        "VOCAB_SIZE": VOCAB_SIZE,
+        "BATCH_SIZE": BATCH_SIZE,
+        "STRIP_CHARS": STRIP_CHARS,
+        "EPOCHS": EPOCHS,
+        "EMBED_DIM" : EMBED_DIM,
+        "ENC_HEADS" : ENC_HEADS,
+        "DEC_HEADS" : DEC_HEADS,
+        "ARTIFACT_DIR" : ARTIFACT_DIR,
+        "LR" : LR,
+    }
 
-print("EPOCHS", EPOCHS)
-print("embed_dim ", EMBED_DIM)
+save_trial_config(current_config)
+
+
+
+#create artifact dir
+if not os.path.exists(ARTIFACT_DIR):
+    os.makedirs(ARTIFACT_DIR)
+
+save_trial_config(current_config)
+
 
 
 ###Creating datasets
@@ -131,3 +155,23 @@ caption_model = ImageCaptioningModel(
     encoder=encoder, 
     decoder=decoder
 )
+print("Model is built")
+
+
+X_batch, y_batch = next(iter(train_dataset.take(1))) #SANITY CHECK
+
+
+cross_entropy = keras.losses.SparseCategoricalCrossentropy(
+    from_logits=False,
+    reduction="none"
+)
+
+
+caption_model.compile(optimizer=keras.optimizers.Adam(0.001), loss=cross_entropy)
+history = caption_model.fit(X_batch, y_batch, validation_data=(X_batch, y_batch), epochs=30)
+
+save_training_history(history, os.path.join(ARTIFACT_DIR, "train_history.csv"))
+caption_model.save_weights(os.path.join(ARTIFACT_DIR, "caption_weights.h5"))
+print("Weights saved")
+
+

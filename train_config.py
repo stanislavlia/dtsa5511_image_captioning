@@ -10,13 +10,15 @@ VOCAB_SIZE=10000
 AUTOTUNE=tf.data.AUTOTUNE
 
 #MODEL HYPERPARAMS
-SEQ_LENGTH=36
+SEQ_LENGTH=32
 BATCH_SIZE=128
 EPOCHS=20
 EMBED_DIM=512
 FF_DIM=256
 ENC_HEADS=2
 DEC_HEADS=2
+LR=0.001
+ARTIFACT_DIR="artifacts"
 
 
 STRIP_CHARS = "!\"#$%&'()*+,-./:;=?@[\]^_`{|}~"
@@ -25,7 +27,6 @@ STRIP_CHARS = "!\"#$%&'()*+,-./:;=?@[\]^_`{|}~"
 
 def get_config():
     return {
-        "TIMESTAMP" : datetime.datetime.now(),
         "DATA_PATH": DATA_PATH,
         "IMAGES_PATH": IMAGES_PATH,
         "IMAGE_SIZE": IMAGE_SIZE,
@@ -34,6 +35,11 @@ def get_config():
         "VOCAB_SIZE": VOCAB_SIZE,
         "BATCH_SIZE": BATCH_SIZE,
         "EPOCHS": EPOCHS,
-        "AUTOTUNE": AUTOTUNE,
-        "STRIP_CHARS": STRIP_CHARS
-    }
+        "STRIP_CHARS": STRIP_CHARS,
+        "EMBED_DIM" : EMBED_DIM,
+        "FF_DIM" : FF_DIM,
+        "ENC_HEADS" : ENC_HEADS,
+        "DEC_HEADS" : DEC_HEADS,
+        "LR" : LR,
+        "ARTIFACT_DIR" : ARTIFACT_DIR,
+    },
