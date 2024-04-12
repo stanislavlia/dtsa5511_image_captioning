@@ -19,10 +19,12 @@ def load_trained_model_weights(path_to_weights, config):
     cnn = get_cnn_model(base_model)
 
     encoder = TransformerEncoderBlock(
-        embed_dim=config["EMBED_DIM"], dense_dim=config["FF_DIM"], num_heads=config["ENC_HEADS"]
+        embed_dim=config["EMBED_DIM"], dense_dim=config["FF_DIM"], num_heads=config["ENC_HEADS"],
+         
     )
     decoder = TransformerDecoderBlock(
         embed_dim=config["EMBED_DIM"], ff_dim=config["FF_DIM"], num_heads=config["DEC_HEADS"], 
+        seq_len=config["SEQ_LENGTH"], vocab_size=config["VOCAB_SIZE"]
     )
 
     caption_model = ImageCaptioningModel(
