@@ -5,9 +5,13 @@ import numpy as np
 import pandas as pd
 import os
 from keras import layers
+import wandb
 
 import argparse
-
+import wandb
+import wandb.integration
+import wandb.integration.keras
+import datetime
 
 
 os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
@@ -34,7 +38,7 @@ def parse_args():
                         help='Number of heads in the encoder multi-head attention mechanism')
     parser.add_argument('--dec_heads', type=int, default=4,
                         help='Number of heads in the decoder multi-head attention mechanism')
-    parser.add_argument('--artifact_dir', type=str, default="./default_run",
+    parser.add_argument('--artifact_dir', type=str, default="./local_runs/default_run",
                         help='Directory to save artifacts')
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Learning rate for training')
@@ -63,8 +67,10 @@ ENC_HEADS = args.enc_heads
 DEC_HEADS = args.dec_heads
 ARTIFACT_DIR = args.artifact_dir
 LR = args.lr
+TIMESTAMP = datetime.datetime.now().strftime("%m-%d-%H:%M")
 
 current_config = {
+        "TIMESTAMP" : TIMESTAMP,
         "DATA_PATH": DATA_PATH,
         "IMAGES_PATH": IMAGES_PATH,
         "IMAGE_SIZE": IMAGE_SIZE,
@@ -86,6 +92,13 @@ from data_processing import *
 
 
 save_trial_config(current_config)
+
+
+#WANDB INIT
+RUNNAME=f"{TIMESTAMP}_model_emd{EMBED_DIM}_DH{DEC_HEADS}_EH{ENC_HEADS}_EPS{EPOCHS}_LR{LR}"
+run = wandb.init(project="image_captioning",
+            config=current_config,
+            name=RUNNAME)
 
 
 
@@ -124,6 +137,7 @@ tokenizer = build_tokenizer(vocab_size=VOCAB_SIZE,
 tokenizer.adapt(train_captionings_df["comment"].tolist())
 print("Tokenizer is ready")
 
+save_tokenizer(tokenizer, os.path.join(ARTIFACT_DIR, "tokenizer.pkl"))
 
 #Create TF-datasets
 def process_input(img_path, captions):
@@ -182,11 +196,31 @@ cross_entropy = keras.losses.SparseCategoricalCrossentropy(
 )
 
 
-caption_model.compile(optimizer=keras.optimizers.Adam(0.001), loss=cross_entropy)
-history = caption_model.fit(X_batch, y_batch, validation_data=(X_batch, y_batch), epochs=30)
+#==================CALLBACKS=========================
+
+bckup = keras.callbacks.BackupAndRestore(
+    os.path.join(ARTIFACT_DIR,"train_backup"), save_freq='epoch', delete_checkpoint=True
+)
+
+early_stopping = keras.callbacks.EarlyStopping(patience=2,
+                                               verbose=1)
+
+wandb_logger = wandb.integration.keras.WandbCallback(verbose=1,
+                                                     save_model=False
+                                                     )
+
+
+caption_model.compile(optimizer=keras.optimizers.Adam(LR), loss=cross_entropy)
+history = caption_model.fit(X_batch, y_batch,
+                             validation_data=(X_batch, y_batch),
+                               epochs=EPOCHS,
+                               callbacks=[bckup, early_stopping, wandb_logger])
 
 save_training_history(history, os.path.join(ARTIFACT_DIR, "train_history.csv"))
-caption_model.save_weights(os.path.join(ARTIFACT_DIR, "caption_weights.h5"))
-print("Weights saved")
+caption_model.save_weights(os.path.join(ARTIFACT_DIR, RUNNAME + ".h5"))
+print("Weights saved: ", RUNNAME + ".h5")
+
+log_artifact_to_wandb(run, ARTIFACT_DIR, RUNNAME)
 
 
+wandb.finish()

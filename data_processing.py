@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-#from train_config import STRIP_CHARS, VOCAB_SIZE, SEQ_LENGTH, IMAGE_SIZE, BATCH_SIZE, AUTOTUNE
 import re
 import keras
 

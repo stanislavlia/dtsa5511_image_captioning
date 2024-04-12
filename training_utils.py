@@ -1,14 +1,16 @@
 import tensorflow as tf
 from model import *
-from train_config import *
 import pandas as pd
 import datetime
 import os
 import json
+import pickle
+import wandb
 
-def load_trained_model_weights(path_to_weights):
+
+def load_trained_model_weights(path_to_weights, config):
     base_model = keras.applications.efficientnet.EfficientNetB1(
-        input_shape=(*IMAGE_SIZE, 3),
+        input_shape=(224, 224, 3),
         include_top=False,
         weights="imagenet",
     )
@@ -17,10 +19,10 @@ def load_trained_model_weights(path_to_weights):
     cnn = get_cnn_model(base_model)
 
     encoder = TransformerEncoderBlock(
-        embed_dim=EMBED_DIM, dense_dim=FF_DIM, num_heads=ENC_HEADS
+        embed_dim=config["EMBED_DIM"], dense_dim=config["FF_DIM"], num_heads=config["ENC_HEADS"]
     )
     decoder = TransformerDecoderBlock(
-        embed_dim=EMBED_DIM, ff_dim=FF_DIM, num_heads=DEC_HEADS, 
+        embed_dim=config["EMBED_DIM"], ff_dim=config["FF_DIM"], num_heads=config["DEC_HEADS"], 
     )
 
     caption_model = ImageCaptioningModel(
@@ -31,7 +33,7 @@ def load_trained_model_weights(path_to_weights):
 
     #Necessary steps to init model
     #to be able to load saved weights 
-    cnn_input = tf.keras.layers.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3))
+    cnn_input = tf.keras.layers.Input(shape=(224, 224, 3))
     training = False
     decoder_input = tf.keras.layers.Input(shape=(None,))
     caption_model([cnn_input,  training, decoder_input])
@@ -77,3 +79,29 @@ def save_trial_config(current_config):
         json.dump(current_config, file, indent=6)
 
     print("Trial config saved: ", trial_config_path)
+
+
+def save_tokenizer(tokenizer, path):
+
+    pickle.dump({'config': tokenizer.get_config(),
+             'weights': tokenizer.get_weights()}
+            , open(path, "wb"))
+    
+    print("Tokenizer is saved: ", path)
+
+def load_tokenizer(path):
+    from_disk = pickle.load(open("tv_layer.pkl", "rb"))
+    new_v = tf.keras.preprocessing.TextVectorization.from_config(from_disk['config'])
+    # You have to call `adapt` with some dummy data (BUG in Keras)
+    new_v.adapt(tf.data.Dataset.from_tensor_slices(["xyz"]))
+    new_v.set_weights(from_disk['weights'])
+
+    return new_v
+
+def log_artifact_to_wandb(run, run_dir, run_name):
+
+    artifact = wandb.Artifact( type="model",
+                               name="saved_assets_dir",
+                               )
+    artifact.add_dir(local_path=run_dir) 
+    run.log_artifact(artifact)

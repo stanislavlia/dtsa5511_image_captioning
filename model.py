@@ -1,6 +1,5 @@
 import tensorflow as tf
 import keras 
-from train_config import *
 from keras import layers
 
 def get_cnn_model(base_model):
@@ -100,7 +99,7 @@ class TransformerDecoderBlock(layers.Layer):
             vocab_size=self.vocab_size,
         )
 
-        self.out = layers.Dense(VOCAB_SIZE, activation="softmax")
+        self.out = layers.Dense(self.vocab_size, activation="softmax")
 
         self.dropout_1 = layers.Dropout(0.3)
         self.dropout_2 = layers.Dropout(0.5)
