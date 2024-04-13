@@ -205,9 +205,6 @@ cross_entropy = keras.losses.SparseCategoricalCrossentropy(
 
 #==================CALLBACKS=========================
 
-bckup = keras.callbacks.BackupAndRestore(
-    os.path.join(ARTIFACT_DIR,"train_backup"), save_freq='epoch', delete_checkpoint=True    
-)
 
 checkpoint_saver = keras.callbacks.ModelCheckpoint(os.path.join(ARTIFACT_DIR, "checkpoints/weights_checkpoint.h5"),
                                                   verbose=1,
@@ -229,7 +226,7 @@ try:
     history = caption_model.fit(train_dataset,
                                 validation_data=val_dataset,
                                 epochs=EPOCHS,
-                                callbacks=[bckup, early_stopping, wandb_logger, checkpoint_saver])
+                                callbacks=[early_stopping, wandb_logger, checkpoint_saver])
 except KeyboardInterrupt:
     print("\n\nTraining is manually interupted\n")
 
