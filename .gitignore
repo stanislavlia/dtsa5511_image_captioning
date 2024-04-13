@@ -2,7 +2,7 @@ data/*
 __pycache__
 assets/*.h5
 assets/*.keras
-*.csv
+splits/*
 *.h5
 *.keras
 artifacts/*
