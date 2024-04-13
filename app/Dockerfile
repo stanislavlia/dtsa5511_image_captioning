@@ -21,4 +21,6 @@ ENV MODULE_NAME="main"
 ENV VARIABLE_NAME="app"
 ENV PORT="8012"
 
- CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8012"]
+
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8012"]
