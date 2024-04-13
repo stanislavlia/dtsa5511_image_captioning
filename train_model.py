@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import keras.callbacks
 import tensorflow as tf
 import numpy as np
 import pandas as pd
@@ -15,8 +16,6 @@ import datetime
 
 
 os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
-
-
 
 #==================PARSING COMMAND LINE ARGS=========================
 
@@ -83,6 +82,7 @@ current_config = {
         "STRIP_CHARS": STRIP_CHARS,
         "EPOCHS": EPOCHS,
         "EMBED_DIM" : EMBED_DIM,
+        "FF_DIM" : FF_DIM,
         "ENC_HEADS" : ENC_HEADS,
         "DEC_HEADS" : DEC_HEADS,
         "ARTIFACT_DIR" : ARTIFACT_DIR,
@@ -140,7 +140,7 @@ tokenizer = build_tokenizer(vocab_size=VOCAB_SIZE,
 tokenizer.adapt(train_captionings_df["comment"].tolist())
 print("Tokenizer is ready")
 
-save_tokenizer(tokenizer, os.path.join(ARTIFACT_DIR, "tokenizer.pkl"))
+save_tokenizer(tokenizer, os.path.join(ARTIFACT_DIR, "tokenizer.keras"))
 
 #Create TF-datasets
 def process_input(img_path, captions):
@@ -205,6 +205,11 @@ bckup = keras.callbacks.BackupAndRestore(
     os.path.join(ARTIFACT_DIR,"train_backup"), save_freq='epoch', delete_checkpoint=True    
 )
 
+checkpoint_saver = keras.callbacks.ModelCheckpoint(os.path.join(ARTIFACT_DIR, "checkpoints/weights_checkpoint.h5"),
+                                                  verbose=1,
+                                                 save_best_only=True,
+                                                  save_weights_only=True)
+
 early_stopping = keras.callbacks.EarlyStopping(patience=2,
                                                verbose=1)
 
@@ -220,12 +225,15 @@ try:
     history = caption_model.fit(train_dataset,
                                 validation_data=val_dataset,
                                 epochs=EPOCHS,
-                                callbacks=[bckup, early_stopping, wandb_logger])
+                                callbacks=[bckup, early_stopping, wandb_logger, checkpoint_saver])
 except KeyboardInterrupt:
-    print("Training is manually interupted")
+    print("\n\nTraining is manually interupted\n")
 
 #==================SAVING_ARTIFACTS=========================
-save_training_history(history, os.path.join(ARTIFACT_DIR, "train_history.csv"))
+try:
+    save_training_history(history, os.path.join(ARTIFACT_DIR, "train_history.csv"))
+except:
+    print("Failed to save history")
 caption_model.save_weights(os.path.join(ARTIFACT_DIR, RUNNAME + ".h5"))
 print("Weights saved: ", RUNNAME + ".h5")
 

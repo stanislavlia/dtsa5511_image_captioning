@@ -80,27 +80,14 @@ def save_trial_config(current_config):
 
 def save_tokenizer(tokenizer, path):
 
-    pickle.dump({'config': tokenizer.get_config(),
-             'weights': tokenizer.get_weights()}
-            , open(path, "wb"))
-    
-    print("Tokenizer is saved: ", path)
-
-
+    tokenizer_model = tf.keras.models.Sequential([tf.keras.layers.Input((1, )),
+                                    tokenizer])
+    tokenizer_model.save(path, save_format="keras")
 
 
 def load_tokenizer(path):
-    from_disk = pickle.load(open("tv_layer.pkl", "rb"))
-    new_v = tf.keras.preprocessing.TextVectorization.from_config(from_disk['config'])
-
-    # You have to call `adapt` with some dummy data (BUG in Keras)
-    new_v.adapt(tf.data.Dataset.from_tensor_slices(["xyz"]))
-    new_v.set_weights(from_disk['weights'])
-
-    return new_v
-
-
-
+    new_tokinzer = tf.keras.models.load_model(path).layers[0]
+    return new_tokinzer
 
 def log_artifact_to_wandb(run, run_dir, run_name):
 

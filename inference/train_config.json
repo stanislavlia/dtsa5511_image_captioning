@@ -1,0 +1,1 @@
+{"DATA_PATH": "data/flickr30k_images/", "IMAGES_PATH": "data/flickr30k_images/flickr30k_images/", "IMAGE_SIZE": [224, 224], "VAL_FRACTION": 0.05, "SEQ_LENGTH": 32, "VOCAB_SIZE": 10000, "BATCH_SIZE": 128, "EPOCHS": 20, "STRIP_CHARS": "!\"#$%&'()*+,-./:;=?@[\\]^_`{|}~", "EMBED_DIM": 512, "FF_DIM": 256, "ENC_HEADS": 2, "DEC_HEADS": 2, "LR": 0.001, "ARTIFACT_DIR": "artifacts"}

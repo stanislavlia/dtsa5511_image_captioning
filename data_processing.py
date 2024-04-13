@@ -5,6 +5,7 @@ import keras
 
 
 
+@tf.keras.saving.register_keras_serializable()
 def text_standrardization(input_str):
     strip_chars = "!\"#$%&'()*+,-./:;=?@[\]^_`{|}~"
 
@@ -17,7 +18,7 @@ def build_tokenizer(vocab_size, seq_len):
                         max_tokens=vocab_size,
                         output_mode="int",
                         output_sequence_length=seq_len,
-                        standardize=text_standrardization,
+                        #standardize=text_standrardization,
                         
                                                     )
     return vectorization
