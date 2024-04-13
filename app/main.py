@@ -65,16 +65,29 @@ def generate_caption(path_to_img):
 
     return decoded_caption
 
-print("SUCCESS")
+print("Artifacts are loaded sucessfully...")
 
-print(generate_caption("example.jpg"))
+@app.get("/")
+def home():
+    return {
+        "Message": "API for Image Captioning",
+        "Health Check ": "OK",
+        "Version": "0.0.1",
+        "MODEL_CONFIG" : CONFIG,
+    }
 
-# @app.post("/caption")
-# async def predict(file: UploadFile = File(...)):
-#     if file.content_type.startswith('image/'):
+@app.post("/caption")
+async def predict(file: UploadFile = File(...)):
+    if file.content_type.startswith('image/'):
 
-#         # Save the image to the tmp/ folder
-#         file_path = f"tmp/{file.filename}"
-#         with open(file_path, "wb") as buffer:
-#             buffer.write(await file.read())
+        # Save the image to the tmp/ folder
+        file_path = f"tmp/{file.filename}"
+        with open(file_path, "wb") as buffer:
+            buffer.write(await file.read())
         
+        predicted_caption = generate_caption(file_path)
+
+        return {"image" : file.filename,
+                "caption" : predicted_caption}
+    
+
