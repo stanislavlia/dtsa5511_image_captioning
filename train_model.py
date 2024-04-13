@@ -67,6 +67,7 @@ FF_DIM = args.ff_dim
 ENC_HEADS = args.enc_heads
 DEC_HEADS = args.dec_heads
 ARTIFACT_DIR = args.artifact_dir
+CNN_MODEL = "resnet50v2"
 LR = args.lr
 TIMESTAMP = datetime.datetime.now().strftime("%m-%d-%H:%M")
 
@@ -86,6 +87,7 @@ current_config = {
         "ENC_HEADS" : ENC_HEADS,
         "DEC_HEADS" : DEC_HEADS,
         "ARTIFACT_DIR" : ARTIFACT_DIR,
+        "CNN_MODEL" : CNN_MODEL,
         "LR" : LR,
     }
 
@@ -167,13 +169,15 @@ print("TF-Datasets are created")
 
 
 #==================BUILDING MODEL=========================
-base_model = keras.applications.efficientnet.EfficientNetB1(
+base_model = tf.keras.applications.ResNet50V2(
         input_shape=(*IMAGE_SIZE, 3),
         include_top=False,
         weights="imagenet",
     )
 
 cnn = get_cnn_model(base_model)
+print("\n\n\n==============FEATURE_EXTRACTOR==========\n\n")
+print(cnn.summary())
 
 encoder = TransformerEncoderBlock(
     embed_dim=EMBED_DIM, dense_dim=FF_DIM, num_heads=ENC_HEADS
