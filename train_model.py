@@ -67,7 +67,7 @@ FF_DIM = args.ff_dim
 ENC_HEADS = args.enc_heads
 DEC_HEADS = args.dec_heads
 ARTIFACT_DIR = args.artifact_dir
-CNN_MODEL = "resnet50v2"
+CNN_MODEL = "efficientnetb1"
 LR = args.lr
 TIMESTAMP = datetime.datetime.now().strftime("%m-%d-%H:%M")
 
@@ -169,7 +169,7 @@ print("TF-Datasets are created")
 
 
 #==================BUILDING MODEL=========================
-base_model = tf.keras.applications.ResNet50V2(
+base_model = tf.keras.applications.EfficientNetB1(
         input_shape=(*IMAGE_SIZE, 3),
         include_top=False,
         weights="imagenet",
