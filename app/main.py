@@ -87,6 +87,7 @@ async def predict(file: UploadFile = File(...)):
         
         predicted_caption = generate_caption(file_path)
 
+        os.remove(file_path)
         return {"image" : file.filename,
                 "caption" : predicted_caption}
     
