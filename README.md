@@ -149,3 +149,10 @@ It currently has 3 tags:
 ### Generated Captions
 
 ![captions](media/generated.png)
+
+### References
+1) Keras example that helped a lot - https://keras.io/examples/vision/image_captioning/
+2) Weights & Biases Experiment tracking free service - https://wandb.ai/site
+3) Paper: Attention is All you Need, A.Vaswani et al - https://arxiv.org/abs/1706.03762
+4) Paper: Deep Visual-Semantic Alignments for Generating Image Description, A. Karpathy, Li Fei-Fei - https://arxiv.org/abs/1412.2306
+5) Paper: EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks, Mingxing Tan, Quoc V. Le - https://arxiv.org/abs/1905.11946
