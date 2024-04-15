@@ -3,6 +3,8 @@
 ## Intro
 This repo contains training and inference code for image captioning model (image2text).
 
+
+
 An **image captioning model** is an artificial intelligence system designed to automatically generate textual descriptions for images. It integrates elements of computer vision to interpret visual content and natural language processing to formulate coherent sentences. The model typically processes the image through a convolutional neural network to extract visual features, and then uses a recurrent neural network or a transformer-based architecture to generate relevant captions based on those features. This technology is useful in various applications such as aiding visually impaired users, organizing image databases, and enhancing user interactions with multimedia content.
 #### Examples
 ![example_dog](media/caption_examples.png)
@@ -11,6 +13,7 @@ An **image captioning model** is an artificial intelligence system designed to a
 ![example_dog](media/example_dog.png)
 ![example_dog](media/example_baseball.png)
 ![example_dog](media/example_london_bus.png)
+![example_dog](media/gradio_gui_example.png)
 
 ## Data
 In this project, we used publicly available dataset **FlickR30K**.
@@ -122,3 +125,25 @@ Train results
 ![wandb](media/wandb_table.png)
 
 You can open jupyter notebooks in this repo that demonstrates 20 examples of captionings for small, medium and large trained models. ``(img_caption_demo_[SIZE].ipynb)``
+
+## Deployment
+I made a simple API for this model within ``/app`` folder. This folder contains ``Dockerfile`` for building an image for this app. You can use image with a model from Docker Hub by following these steps:
+
+1) Pull docker image
+   ```bash
+   docker pull stanislavlia/image_cap:s_model
+   ```
+2) Run docker container with model server. It will deploy application to endpoint ``http://0.0.0.0:8012``
+   ```
+   docker run -p 8012:8012 stanislavlia/image_cap:s_model
+   ```
+3) Send an image for captioning using HTTP to endpoint ``http://0.0.0.0:8012/caption``
+   ```
+   curl -X POST -F "file=@example.jpg" http://localhost:8012/caption
+   ```
+It currently has 3 tags:
+  - ``s_model``  - small model (about 99MB)
+  - ``l_model`` - large model (about 350 MB)
+  - ``xl_model`` - extra large model (about 450 MB)
+
+   
