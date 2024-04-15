@@ -38,6 +38,10 @@ As I understood that the training procedure was going to be **computationlly int
   - Data preprocessing (data_processing.py)
   - Experiment tracking and saving artifacts (training_utils.py)
 
+### Experiment tracking
+This project uses experiment tracking service called **Weights & Biases**. Weights & Biases (W&B) is the AI developer platform, with tools for training models, fine-tuning models, and leveraging foundation models.
+It is fairly straightforward to set up W&B in 5 minutes, then quickly iterate on your machine learning pipeline with the confidence that your models and data are tracked and versioned in a reliable system of record
+
 
 ### Training script
 And the main file in this repo is - **train_model.py** which is a Python script that takes all these modules and train a model with hyperparameters specified in **command line arguments** and at the same time loggin all process both **locally** and to service **Weights & Biases**.
