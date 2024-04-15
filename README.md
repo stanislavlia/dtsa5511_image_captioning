@@ -33,7 +33,12 @@ During the training, we keep our **vocabulary** of constants size - **10 000 wor
 ![example_dog](media/architecture.png)
 
 ## Training
-As I understood that the training procedure was going to be **computationlly intensive and long**, I prepared several python modules to make workflow more clean, maintainable and efficient.
+Given the architecture, we are going to minimize *Sparse Categorical CrossEntropy* between softmax output and ground truth token in a position. 
+As a metric of performance, we employ - **next token prediction accuracy**.
+
+The training was done on a powerful laptop with embedded GPU - **NVIDIA GeForce RTX 4090**
+
+From the start, I understood that the training procedure was going to be **computationlly intensive and long**, I prepared several python modules to make workflow more clean, maintainable and efficient.
   - Model architecture (model.py)
   - Data preprocessing (data_processing.py)
   - Experiment tracking and saving artifacts (training_utils.py)
@@ -101,4 +106,16 @@ This document provides detailed descriptions of the command line arguments avail
   - **Default**: `0.001`
   - **Description**: Specifies the learning rate used in training the model.
 
+### Training history and Results
+I trained **5** models with the same architecture shown above but with different scale (50MB to 450 MB). The model names correspond to their size (e.g. XL, L, S, tiny XS). It was quite expected that larger model should certainly outperform smaller ones and that's exactly what we can see. I also have to add that all of the models reach a level of performance which is enough to generate reasonable captions. Although, the largest model is more capable in terms of catching details precisely.
 
+You can access interactive report in WandB by this link - https://api.wandb.ai/links/stanislavliashkov/b78pmiie
+
+train history
+![wandb](media/wandb_plots.png)
+
+Models comparison
+![wandb](media/wandb_barplot.png)
+
+Train results
+![wandb](media/wandb_table.png)
