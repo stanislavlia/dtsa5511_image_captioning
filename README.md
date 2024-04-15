@@ -17,3 +17,15 @@ The **Flickr30k** dataset is a popular benchmark for sentence-based picture port
 The size is about **9GB**
 
 Source - https://www.kaggle.com/datasets/hsankesara/flickr-image-dataset
+
+## Model Architecture
+#### Architecture diagram
+The architecture of our Image captioning model consists of 3 parts:
+  1) CNN as feature extractor from images. (EfficientNetB1 in our case)
+  2) Transformer Encoder Block that process image embedding
+  3) Transformer Decoder Block that generates a caption in autoregressive mode (token by token)
+
+This architecture uses Convolution NN as a feature extractor that produces 2D "embedding" of image. Then, this "embedding" matrix produced by CNN is passed to Transformer Encoder block and then the model starts to generate caption in Transformer Decoder part. The last layer of our model is **softmax** over all words in **vocabulary**.
+
+
+![example_dog](media/architecture.png)
