@@ -146,4 +146,6 @@ It currently has 3 tags:
   - ``l_model`` - large model (about 350 MB)
   - ``xl_model`` - extra large model (about 450 MB)
 
-   
+### Generated Captions
+
+![captions](media/generated.png)
