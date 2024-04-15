@@ -16,16 +16,20 @@ from data_processing import *
 
 ##simple ML API for image captioning 
 
+MODEL_WEIGHTS="assets/XL_model_weights.h5"
+MODEL_CONFIG="assets/XL_model_config.json"
+TOKENIZER="assets/XL_tokenizer.keras"
+
 app = fastapi.FastAPI()
 
 if not os.path.exists('tmp'):
     os.makedirs('tmp')
 
-with open("model_config.json", "r") as conf_f:
+with open(MODEL_CONFIG, "r") as conf_f:
     CONFIG = json.load(conf_f)
 
-tokenizer = load_tokenizer("tokenizer.keras")
-caption_model = load_trained_model_weights("L_size_model_weights.h5", CONFIG)
+tokenizer = load_tokenizer(TOKENIZER)
+caption_model = load_trained_model_weights(MODEL_WEIGHTS, CONFIG)
 vocab = tokenizer.get_vocabulary()
 index_lookup = dict(zip(range(len(vocab)), vocab))
 max_decoded_sentence_length = CONFIG["SEQ_LENGTH"] - 1

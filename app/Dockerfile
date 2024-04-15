@@ -6,15 +6,10 @@ COPY model.py /app/model.py
 COPY training_utils.py /app/training_utils.py
 COPY data_processing.py /app/data_processing.py
 
-COPY small_model_config.json /app/small_model_config.json
-COPY s_model_weights.h5 /app/s_model_weights.h5
-COPY s_tokenizer.keras /app/s_tokenizer.keras
+COPY assets/XL_model_config.json /app/assets/XL_model_config.json
+COPY assets/XL_model_weights.h5 /app/assets/XL_model_weights.h5
+COPY assets/XL_tokenizer.keras /app/assets/XL_tokenizer.keras
 
-# For large model
-
-# COPY model_config.json /app/model_config.json
-# COPY L_size_model_weights.h5 /app/L_size_model_weights.h5
-# COPY tokenizer.keras /app/tokenizer.keras
 
 WORKDIR /app
 RUN pip install --no-cache-dir -r requirements.txt
