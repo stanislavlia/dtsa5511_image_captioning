@@ -10,6 +10,7 @@ An **image captioning model** is an artificial intelligence system designed to a
 #### Application GUI
 ![example_dog](media/example_dog.png)
 ![example_dog](media/example_baseball.png)
+![example_dog](media/example_london_bus.png)
 
 ## Data
 In this project, we used publicly available dataset **FlickR30K**.
@@ -119,3 +120,5 @@ Models comparison
 
 Train results
 ![wandb](media/wandb_table.png)
+
+You can open jupyter notebooks in this repo that demonstrates 20 examples of captionings for small, medium and large trained models. ``(img_caption_demo_[SIZE].ipynb)``
